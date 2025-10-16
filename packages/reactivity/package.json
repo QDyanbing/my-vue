@@ -2,10 +2,9 @@
   "name": "@vue/reactivity",
   "version": "1.0.0",
   "description": "响应式系统",
-  "main": "index.js",
+  "main": "dist/reactivity.cjs.js",
   "module": "dist/reactivity.esm.js",
   "files": [
-    "index.js",
     "dist"
   ],
   "sideEffects": false,
@@ -17,5 +16,8 @@
       "cjs",
       "global"
     ]
+  },
+  "dependencies": {
+    "@vue/shared": "workspace:*"
   }
 }
