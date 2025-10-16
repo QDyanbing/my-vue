@@ -1,0 +1,12 @@
+{
+  "name": "vue",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "module": "dist/vue.esm-bundler.js",
+  "types": "dist/vue.d.ts",
+  "files": [
+    "index.js",
+    "dist"
+  ]
+}
