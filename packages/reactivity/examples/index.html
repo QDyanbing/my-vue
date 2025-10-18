@@ -6,21 +6,37 @@
     <title>Document</title>
   </head>
   <body>
-    <button id="btn">click</button>
+    <div id="app"></div>
+    <button id="flag">flag</button>
+    <button id="name">name</button>
+    <button id="age">age</button>
+
     <script type="module">
       import { ref, effect } from '../dist/reactivity.esm.js';
 
-      const flag = ref(false);
-      const count = ref(0);
+      const flag = ref(true);
+      const name = ref('John');
+      const age = ref(20);
 
       effect(() => {
-        count.value;
-        flag.value;
         console.count('effect');
+        if (flag.value) {
+          app.innerHTML = name.value;
+        } else {
+          app.innerHTML = age.value;
+        }
       });
 
-      document.querySelector('#btn').addEventListener('click', () => {
-        count.value++;
+      document.querySelector('#flag').addEventListener('click', () => {
+        flag.value = !flag.value;
+      });
+
+      document.querySelector('#name').addEventListener('click', () => {
+        name.value = name.value + Math.random();
+      });
+
+      document.querySelector('#age').addEventListener('click', () => {
+        age.value++;
       });
     </script>
   </body>

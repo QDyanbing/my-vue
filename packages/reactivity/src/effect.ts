@@ -1,3 +1,4 @@
+import { startTrack, endTrack } from './system';
 import type { Link } from './system';
 
 // @TODO：这里的类型有点麻烦暂时没改
@@ -45,13 +46,17 @@ class ReactiveEffect {
     // 将当前的 effect 设置为活跃的 effect
     activeSub = this;
 
-    // 将依赖项链表的尾节点设置为 undefined
-    // 这里这么做的主要原因是，为了判断出当前是否是第一次执行，第一次执行是头尾都为 undefined；非第一次执行时把尾节点指向undefined
-    this.depsTail = undefined;
+    // 开始追踪依赖
+    startTrack(this);
 
     try {
       return this.fn();
     } finally {
+      // 如果尾节点有nextDep，则说明有未被复用的节点，需要回收
+      if (this.depsTail?.nextDep) {
+        endTrack(this);
+      }
+
       // 执行完成后，恢复之前的 effect，这样就可以处理嵌套的逻辑了
       activeSub = prevSub;
     }

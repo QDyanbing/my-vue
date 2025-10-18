@@ -64,9 +64,10 @@ export function link(dep: Dep, sub: Sub) {
   const newLink: Link = {
     sub,
     dep,
+    // 在第二次调用effect做对比时如果节点没有被复用会创建新节点，在这里可以把没比对成功的节点记录在新节点的next上，来方便后面回收这个节点
+    nextDep,
     nextSub: undefined,
     prevSub: undefined,
-    nextDep: undefined,
   };
 
   /**
@@ -111,4 +112,78 @@ export function propagate(subs: Link) {
   }
 
   queuedEffects.forEach(effect => effect.notify?.());
+}
+
+/**
+ * 开始追踪依赖，将depsTail，尾节点设置成 undefined
+ * @param sub
+ */
+export function startTrack(sub: Sub) {
+  // 将依赖项链表的尾节点设置为 undefined
+  // 这里这么做的主要原因是，为了判断出当前是否是第一次执行，第一次执行是头尾都为 undefined；非第一次执行时把尾节点指向undefined
+  sub.depsTail = undefined;
+}
+
+/**
+ * 结束追踪，找到需要清理的依赖，断开关联关系
+ * @param sub
+ */
+export function endTrack(sub: Sub) {
+  const depsTail = sub.depsTail;
+  /**
+   * 如果 depsTail 有，并且 depsTail 还有 nextDep ，我们应该把它们的依赖关系清理掉
+   * 如果 depsTail 没有，并且头节点有，那就把所有的都清理掉
+   */
+  if (depsTail) {
+    if (depsTail.nextDep) {
+      clearTracking(depsTail.nextDep);
+      // 当前节点删除后，把当前节点的下一个节点指向 undefined
+      depsTail.nextDep = undefined;
+    }
+  } else if (sub.deps) {
+    clearTracking(sub.deps);
+    // 当前节点删除后，把当前节点的依赖项指向 undefined
+    sub.deps = undefined;
+  }
+}
+
+/**
+ * 清理依赖关系
+ * @param link
+ */
+function clearTracking(link: Link) {
+  // 这里是双向链表删除指定节点
+  while (link) {
+    const { prevSub, nextSub, nextDep, dep } = link;
+
+    if (prevSub) {
+      // 当前节点有上一个节点，那就把上一个节点的下一个节点指向当前节点的下一个节点
+      prevSub.nextSub = nextSub;
+      // 当前节点删除后，把当前节点的下一个节点指向 undefined
+      link.nextSub = undefined;
+    } else {
+      // 当前节点没有上一个节点，那就是头节点，那就把 dep.subs 指向当前节点的下一个节点
+      dep.subs = nextSub;
+    }
+
+    if (nextSub) {
+      // 当前节点有下一个节点，那就把下一个节点的上一个节点指向当前节点的上一个节点
+      nextSub.prevSub = prevSub;
+      // 当前节点删除后，把当前节点的上一个节点指向 undefined
+      link.prevSub = undefined;
+    } else {
+      // 当前节点没有下一个节点，那就是尾节点，那就把 dep.subsTail 只想上一个节点
+      dep.subsTail = prevSub;
+    }
+
+    // 当前节点删除后，把当前节点的依赖项指向 undefined
+    link.dep = undefined;
+    // 当前节点删除后，把当前节点的订阅者指向 undefined
+    link.sub = undefined;
+    // 当前节点删除后，把当前节点的下一个节点指向 undefined
+    link.nextDep = undefined;
+
+    // 当前节点删除后，把当前节点的下一个节点指向当前节点的下一个节点
+    link = nextDep;
+  }
 }
