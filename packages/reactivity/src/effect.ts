@@ -20,14 +20,12 @@ export let activeSub = null;
 
 // Effect 的实现类
 class ReactiveEffect {
-  /**
-   * 依赖项链表的头节点 ref1 -> ref2 -> ref3
-   */
+  // 依赖项链表的头节点 ref1 -> ref2 -> ref3
   deps: Link | undefined;
-  /**
-   * 依赖项链表的尾节点
-   */
+  // 依赖项链表的尾节点
   depsTail: Link | undefined;
+  // 是否正在追踪依赖,解决循环依赖问题
+  tracking: boolean = false;
 
   constructor(public fn: Function) {}
 

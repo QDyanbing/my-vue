@@ -16,6 +16,7 @@ export interface Sub {
   deps: Link | undefined;
   // 依赖项链表的尾节点
   depsTail: Link | undefined;
+  tracking: boolean;
 }
 
 /**
@@ -116,12 +117,16 @@ export function link(dep: Dep, sub: Sub) {
  * @param subs
  */
 export function propagate(subs: Link) {
-  let sub = subs;
+  let link = subs;
   let queuedEffects = [];
 
-  while (sub) {
-    queuedEffects.push(sub.sub);
-    sub = sub.nextSub;
+  while (link) {
+    const sub = link.sub;
+    if (!sub.tracking) {
+      queuedEffects.push(link.sub);
+    }
+
+    link = link.nextSub;
   }
 
   queuedEffects.forEach(effect => effect.notify?.());
@@ -132,6 +137,8 @@ export function propagate(subs: Link) {
  * @param sub
  */
 export function startTrack(sub: Sub) {
+  // 设置当前 effect 正在追踪依赖
+  sub.tracking = true;
   // 将依赖项链表的尾节点设置为 undefined
   // 这里这么做的主要原因是，为了判断出当前是否是第一次执行，第一次执行是头尾都为 undefined；非第一次执行时把尾节点指向undefined
   sub.depsTail = undefined;
@@ -142,6 +149,8 @@ export function startTrack(sub: Sub) {
  * @param sub
  */
 export function endTrack(sub: Sub) {
+  // 设置当前 effect 不再追踪依赖
+  sub.tracking = false;
   const depsTail = sub.depsTail;
   /**
    * 如果 depsTail 有，并且 depsTail 还有 nextDep ，我们应该把它们的依赖关系清理掉
