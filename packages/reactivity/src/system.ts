@@ -50,8 +50,12 @@ export function link(dep: Dep, sub: Sub) {
   const currentDep = sub.depsTail;
   // effect 链表的下一个节点，如果尾节点有，那就用尾节点的 nextDep，如果尾节点没有，那就用头节点
   const nextDep = currentDep === undefined ? sub.deps : currentDep.nextDep;
-  // 如果下一个节点存在，并且下一个节点的订阅者是当前的订阅者，那么就复用下一个节点
-  if (nextDep && nextDep.sub === sub) {
+  // 如果下一个节点存在，并且下一个节点的依赖项是当前的依赖项，那么就复用下一个节点
+  // 这里实际上比较的是两个ref是不是一致的
+  // effect链表的节点保存的是所使用的ref串联起来的链表；nextDep.dep 是从 effect链表中获取的ref
+  // dep是当前调用getter得到的ref
+  // 如果两者一致则证明依赖已经收集过了，直接返回；当前节点比较后要把尾节点指向nextDep（即节点后移，才能继续比较下一个）；
+  if (nextDep && nextDep.dep === dep) {
     sub.depsTail = nextDep;
     return;
   }
