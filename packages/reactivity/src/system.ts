@@ -34,6 +34,9 @@ export interface Link {
   nextDep: Link | undefined;
 }
 
+// 保存已经被清理掉的节点，留着复用
+let linkPool: Link;
+
 /**
  * 链接链表关系
  * @param dep - 依赖项 ref
@@ -60,15 +63,25 @@ export function link(dep: Dep, sub: Sub) {
     return;
   }
 
-  // 构建新的链表节点
-  const newLink: Link = {
-    sub,
-    dep,
-    // 在第二次调用effect做对比时如果节点没有被复用会创建新节点，在这里可以把没比对成功的节点记录在新节点的next上，来方便后面回收这个节点
-    nextDep,
-    nextSub: undefined,
-    prevSub: undefined,
-  };
+  let newLink: Link;
+  // 查看 linkPool 是否有可用的节点
+  if (linkPool) {
+    // 如果有就取一个节点复用
+    newLink = linkPool;
+    linkPool = linkPool.nextDep;
+    newLink.nextDep = nextDep;
+    newLink.dep = dep;
+    newLink.sub = sub;
+  } else {
+    // 如果没有，就创建新的
+    newLink = {
+      sub,
+      dep, // 在第二次调用effect做对比时如果节点没有被复用会创建新节点，在这里可以把没比对成功的节点记录在新节点的next上，来方便后面回收这个节点
+      nextDep,
+      nextSub: undefined,
+      prevSub: undefined,
+    };
+  }
 
   /**
    * 关联链表关系，分两种情况-这里是给依赖项关联订阅者 ref => effect1 => effect2 => effect3
@@ -180,8 +193,10 @@ function clearTracking(link: Link) {
     link.dep = undefined;
     // 当前节点删除后，把当前节点的订阅者指向 undefined
     link.sub = undefined;
-    // 当前节点删除后，把当前节点的下一个节点指向 undefined
-    link.nextDep = undefined;
+
+    // 把不要的节点保存在  linkPool 中，留着复用；这样可以避免每次都创建新的节点，提高性能；
+    link.nextDep = linkPool;
+    linkPool = link;
 
     // 当前节点删除后，把当前节点的下一个节点指向当前节点的下一个节点
     link = nextDep;
