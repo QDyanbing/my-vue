@@ -50,10 +50,8 @@ class ReactiveEffect {
     try {
       return this.fn();
     } finally {
-      // 如果尾节点有nextDep，则说明有未被复用的节点，需要回收
-      if (this.depsTail?.nextDep) {
-        endTrack(this);
-      }
+      // 结束追踪依赖
+      endTrack(this);
 
       // 执行完成后，恢复之前的 effect，这样就可以处理嵌套的逻辑了
       activeSub = prevSub;
