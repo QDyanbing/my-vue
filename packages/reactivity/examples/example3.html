@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script type="module">
+      import { effect, ref, computed } from '../dist/reactivity.esm.js';
+
+      const age = ref(18);
+
+      const c = computed(() => age.value + 1);
+
+      effect(() => {
+        console.log(c.value);
+      });
+
+      setTimeout(() => {
+        age.value++;
+      }, 1000);
+    </script>
+  </body>
+</html>

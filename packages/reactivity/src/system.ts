@@ -112,6 +112,18 @@ export function link(dep: Dependency, sub: Sub) {
   }
 }
 
+function processComputedUpdate(sub: any) {
+  /**
+   * 更新计算属性
+   * 1. 调用 update
+   * 2. 通知 subs 链表上所有的 sub，重新执行
+   */
+  if (sub.subs && sub.update()) {
+    // sub.update 返回 true，表示值发生了变化
+    propagate(sub.subs);
+  }
+}
+
 /**
  * 传播更新的函数
  * @param subs
@@ -124,7 +136,11 @@ export function propagate(subs: Link) {
     const sub = link.sub;
 
     if (!sub.tracking) {
-      queuedEffects.push(link.sub);
+      if ('update' in sub) {
+        processComputedUpdate(sub);
+      } else {
+        queuedEffects.push(link.sub);
+      }
     }
 
     link = link.nextSub;

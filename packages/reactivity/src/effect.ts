@@ -18,6 +18,10 @@ export interface ReactiveEffectOptions extends DebuggerOptions {
 // 用来保存当前正在执行的 effect
 export let activeSub = null;
 
+export function setActiveSub(sub: any) {
+  activeSub = sub;
+}
+
 // Effect 的实现类
 class ReactiveEffect {
   // 依赖项链表的头节点 ref1 -> ref2 -> ref3
@@ -42,7 +46,7 @@ class ReactiveEffect {
      */
     const prevSub = activeSub;
     // 将当前的 effect 设置为活跃的 effect
-    activeSub = this;
+    setActiveSub(this);
 
     // 开始追踪依赖
     startTrack(this);
@@ -54,7 +58,7 @@ class ReactiveEffect {
       endTrack(this);
 
       // 执行完成后，恢复之前的 effect，这样就可以处理嵌套的逻辑了
-      activeSub = prevSub;
+      setActiveSub(prevSub);
     }
   }
 
