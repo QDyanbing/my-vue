@@ -1,4 +1,4 @@
-import { isObject } from '@vue/shared';
+import { hasChanged, isObject } from '@vue/shared';
 import { activeSub } from './effect';
 import { link, propagate } from './system';
 import type { Link } from './system';
@@ -13,7 +13,8 @@ class RefImpl {
   // 保存实际的值 ref(0) -> 0
   _value: any;
   // 标记为 Ref，主要用于判断是否是 Ref 对象
-  [ReactiveFlags.IS_REF]: true;
+  [ReactiveFlags.IS_REF]: true = true;
+
   /**
    * 订阅者链表的头节点，理解为我们将的 head effect1 -> effect2 -> effect3
    */
@@ -36,10 +37,12 @@ class RefImpl {
   }
 
   set value(newValue: any) {
-    this._value = isObject(newValue) ? reactive(newValue) : newValue;
+    if (hasChanged(newValue, this._value)) {
+      this._value = isObject(newValue) ? reactive(newValue) : newValue;
 
-    // 当设置 value 时，触发更新，通知订阅者更新
-    triggerRef(this);
+      // 当设置 value 时，触发更新，通知订阅者更新
+      triggerRef(this);
+    }
   }
 }
 
