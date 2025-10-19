@@ -16,33 +16,46 @@ export function reactive(target: object) {
  */
 const reactiveMap = new WeakMap<object, object>();
 
+/**
+ * 保存
+ * target = { a: 1, b: 2 }
+ * reactiveSet = [Proxy, Proxy]
+ */
+const reactiveSet = new WeakSet<object>();
+
+const mutableHandlers: ProxyHandler<object> = {
+  get(target, key, receiver) {
+    // target = { a: 1, b: 2 }
+    // 收集依赖，绑定target中的key和sub之间的依赖关系
+    track(target, key);
+
+    // receiver 用来保证访问器里面的 this 指向代理对象；
+    return Reflect.get(target, key, receiver);
+  },
+  set(target, key, value, receiver) {
+    // 先完成赋值操作
+    const res = Reflect.set(target, key, value, receiver);
+    // 再触发依赖更新
+    trigger(target, key);
+
+    return res;
+  },
+};
+
 export function createReactiveObject(target: object) {
   // 如果 target 不是对象，则直接返回
   if (!isObject(target)) return target;
 
+  // 判断 target 是不是在 reactiveSet 里在则直接返回；
+  if (reactiveSet.has(target)) return target;
+
   const existingProxy = reactiveMap.get(target);
   if (existingProxy) return existingProxy;
 
-  const proxy = new Proxy(target, {
-    get(target, key, receiver) {
-      // target = { a: 1, b: 2 }
-      // 收集依赖，绑定target中的key和sub之间的依赖关系
-      track(target, key);
-
-      // receiver 用来保证访问器里面的 this 指向代理对象；
-      return Reflect.get(target, key, receiver);
-    },
-    set(target, key, value, receiver) {
-      // 先完成赋值操作
-      const res = Reflect.set(target, key, value, receiver);
-      // 再触发依赖更新
-      trigger(target, key);
-
-      return res;
-    },
-  });
+  const proxy = new Proxy(target, mutableHandlers);
 
   reactiveMap.set(target, proxy);
+  reactiveSet.add(proxy);
 
   return proxy;
 }
@@ -106,4 +119,9 @@ class Dep {
   subsTail: Link | undefined;
 
   constructor() {}
+}
+
+// 判断 target 是不是响应式，只要在reactiveSet中就是响应式；
+export function isReactive(target: any) {
+  return reactiveSet.has(target);
 }
