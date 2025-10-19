@@ -24,6 +24,8 @@ class ComputedRefImpl implements Dependency, Sub {
   depsTail: Link;
 
   tracking: boolean = false;
+  // 计算属性，脏不脏，如果 dirty 为 true，表示计算属性是脏的，get value 的时候，需要执行 update
+  dirty: boolean = true;
 
   constructor(
     public fn: () => any,
@@ -31,7 +33,9 @@ class ComputedRefImpl implements Dependency, Sub {
   ) {}
 
   get value() {
-    this.update();
+    if (this.dirty) {
+      this.update();
+    }
 
     if (activeSub) {
       link(this, activeSub);
@@ -65,6 +69,7 @@ class ComputedRefImpl implements Dependency, Sub {
       const oldValue = this._value;
       // 拿到新的值
       this._value = this.fn();
+
       // 如果值发生了变化，就返回 true，否则就是 false
       return hasChanged(this._value, oldValue);
     } finally {

@@ -17,6 +17,7 @@ export interface Sub {
   // 依赖项链表的尾节点
   depsTail: Link | undefined;
   tracking: boolean;
+  dirty: boolean;
 }
 
 /**
@@ -112,7 +113,7 @@ export function link(dep: Dependency, sub: Sub) {
   }
 }
 
-function processComputedUpdate(sub: any) {
+function processComputedUpdate(sub) {
   /**
    * 更新计算属性
    * 1. 调用 update
@@ -128,25 +129,23 @@ function processComputedUpdate(sub: any) {
  * 传播更新的函数
  * @param subs
  */
-export function propagate(subs: Link) {
+export function propagate(subs) {
   let link = subs;
-  let queuedEffects = [];
-
+  let queuedEffect = [];
   while (link) {
     const sub = link.sub;
-
-    if (!sub.tracking) {
+    if (!sub.tracking && !sub.dirty) {
+      sub.dirty = true;
       if ('update' in sub) {
         processComputedUpdate(sub);
       } else {
-        queuedEffects.push(link.sub);
+        queuedEffect.push(sub);
       }
     }
-
     link = link.nextSub;
   }
 
-  queuedEffects.forEach(effect => effect.notify?.());
+  queuedEffect.forEach(effect => effect.notify());
 }
 
 /**
@@ -169,6 +168,9 @@ export function endTrack(sub: Sub) {
   // 设置当前 effect 不再追踪依赖
   sub.tracking = false;
   const depsTail = sub.depsTail;
+  // 追踪完了，不脏了
+  sub.dirty = false;
+
   /**
    * 如果 depsTail 有，并且 depsTail 还有 nextDep ，我们应该把它们的依赖关系清理掉
    * 如果 depsTail 没有，并且头节点有，那就把所有的都清理掉
