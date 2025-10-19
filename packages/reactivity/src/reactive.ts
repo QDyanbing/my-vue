@@ -7,9 +7,21 @@ export function reactive(target: object) {
   return createReactiveObject(target);
 }
 
+/**
+ * 缓存对象的代理对象，避免重复创建代理对象
+ * target = { a: 1, b: 2 }
+ * reactiveMap = {
+ *   [target]: Proxy,
+ * }
+ */
+const reactiveMap = new WeakMap<object, object>();
+
 export function createReactiveObject(target: object) {
   // 如果 target 不是对象，则直接返回
   if (!isObject(target)) return target;
+
+  const existingProxy = reactiveMap.get(target);
+  if (existingProxy) return existingProxy;
 
   const proxy = new Proxy(target, {
     get(target, key, receiver) {
@@ -17,6 +29,7 @@ export function createReactiveObject(target: object) {
       // 收集依赖，绑定target中的key和sub之间的依赖关系
       track(target, key);
 
+      // receiver 用来保证访问器里面的 this 指向代理对象；
       return Reflect.get(target, key, receiver);
     },
     set(target, key, value, receiver) {
@@ -28,6 +41,8 @@ export function createReactiveObject(target: object) {
       return res;
     },
   });
+
+  reactiveMap.set(target, proxy);
 
   return proxy;
 }
