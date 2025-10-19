@@ -30,6 +30,7 @@ class ReactiveEffect implements Sub {
   depsTail: Link | undefined;
   // 是否正在追踪依赖,解决循环依赖问题
   tracking: boolean = false;
+
   dirty: boolean = false;
 
   constructor(public fn: Function) {}

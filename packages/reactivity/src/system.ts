@@ -65,6 +65,12 @@ export function link(dep: Dependency, sub: Sub) {
     return;
   }
 
+  /**
+   * computed这里
+   * @TODO 源码这里不是这样做的，源码是时间换空间；目前的处理方式是空间换时间；这里后面也可以按官方的尝试一下；
+   * 源码是 如果dep和sub建立过关联关系，则直接返回；否则创建新节点；
+   */
+
   let newLink: Link;
   // 查看 linkPool 是否有可用的节点
   if (linkPool) {
@@ -113,7 +119,7 @@ export function link(dep: Dependency, sub: Sub) {
   }
 }
 
-function processComputedUpdate(sub) {
+function processComputedUpdate(sub: any) {
   /**
    * 更新计算属性
    * 1. 调用 update
@@ -129,12 +135,17 @@ function processComputedUpdate(sub) {
  * 传播更新的函数
  * @param subs
  */
-export function propagate(subs) {
+export function propagate(subs: Link) {
   let link = subs;
   let queuedEffect = [];
   while (link) {
     const sub = link.sub;
     if (!sub.tracking && !sub.dirty) {
+      /**
+       * @TODO 源码这里是没有建立关联关系，我们的做法是空间换时间；建立了重复关系，但判断了没有执行过；这里后面也可以按官方的尝试一下；
+       */
+      // 不管effect还是computed都设置为脏的，一旦重新执行就会走这边；走这边到这里就变成了脏的；
+      // 当dirty为false时，才会进来；下一个节点还是脏的，就进不来了；当追踪完了就不脏了；
       sub.dirty = true;
       if ('update' in sub) {
         processComputedUpdate(sub);

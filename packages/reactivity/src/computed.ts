@@ -11,6 +11,11 @@ export interface WritableComputedOptions<T, S = T> {
   set: ComputedSetter<S>;
 }
 
+/**
+ * 计算属性的实现类,计算属性即是 dep，也是 sub；
+ * 当computed内函数执行收集依赖时，会收集 computed 作为 sub；
+ * 当computed的值被effect访问时，会作为effect的dep（这个时候effect为sub）
+ */
 class ComputedRefImpl implements Dependency, Sub {
   // computed 也是一个ref，通过 isRef 也返回true；
   [ReactiveFlags.IS_REF] = true;
@@ -34,9 +39,11 @@ class ComputedRefImpl implements Dependency, Sub {
 
   get value() {
     if (this.dirty) {
+      // 如果计算属性脏了，执行 update
       this.update();
     }
 
+    // 作为 dep 要和 sub 做关联关系，收集依赖
     if (activeSub) {
       link(this, activeSub);
     }
