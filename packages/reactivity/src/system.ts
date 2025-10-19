@@ -1,7 +1,7 @@
 /**
  * 依赖项
  */
-export interface Dep {
+export interface Dependency {
   // 订阅者链表的头节点
   subs: Link | undefined;
   // 订阅者链表的尾节点
@@ -30,7 +30,7 @@ export interface Link {
   // 上一个订阅者节点
   prevSub: Link | undefined;
   // 依赖项
-  dep: Dep;
+  dep: Dependency;
   // 下一个依赖项节点
   nextDep: Link | undefined;
 }
@@ -43,7 +43,7 @@ let linkPool: Link;
  * @param dep - 依赖项 ref
  * @param sub - 订阅者 effect
  */
-export function link(dep: Dep, sub: Sub) {
+export function link(dep: Dependency, sub: Sub) {
   /**
    * 尝试复用链表节点:如果不复用，会造成每次调用effect时，都会创建新的链表节点，effect多次执行；
    * 分两种情况：
@@ -122,6 +122,7 @@ export function propagate(subs: Link) {
 
   while (link) {
     const sub = link.sub;
+
     if (!sub.tracking) {
       queuedEffects.push(link.sub);
     }
