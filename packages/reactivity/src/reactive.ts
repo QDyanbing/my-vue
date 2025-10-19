@@ -1,4 +1,4 @@
-import { isObject } from '@vue/shared';
+import { hasChanged, isObject } from '@vue/shared';
 import { link, propagate } from './system';
 import { activeSub } from './effect';
 import type { Link } from './system';
@@ -32,11 +32,16 @@ const mutableHandlers: ProxyHandler<object> = {
     // receiver 用来保证访问器里面的 this 指向代理对象；
     return Reflect.get(target, key, receiver);
   },
-  set(target, key, value, receiver) {
+  set(target, key, newValue, receiver) {
+    const oldVal = target[key];
+
     // 先完成赋值操作
-    const res = Reflect.set(target, key, value, receiver);
-    // 再触发依赖更新
-    trigger(target, key);
+    const res = Reflect.set(target, key, newValue, receiver);
+
+    if (hasChanged(newValue, oldVal)) {
+      // 如果旧值和新值不相等，则触发依赖更新
+      trigger(target, key);
+    }
 
     return res;
   },

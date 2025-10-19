@@ -9,12 +9,15 @@
     <script type="module">
       import { reactive, effect } from '../dist/reactivity.esm.js';
 
-      const obj = { a: 1, b: 2 };
+      const state = reactive({ age: 18 });
 
-      const state = reactive(obj);
-      const state2 = reactive(state);
+      effect(() => {
+        console.log(state.age);
+      });
 
-      console.log(state === state2);
+      setTimeout(() => {
+        state.age = 18;
+      }, 1000);
     </script>
   </body>
 </html>
