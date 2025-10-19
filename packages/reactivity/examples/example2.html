@@ -7,18 +7,16 @@
   </head>
   <body>
     <script type="module">
-      import { reactive, effect, ref } from '../dist/reactivity.esm.js';
+      import { reactive, effect } from '../dist/reactivity.esm.js';
 
-      const age = ref(18);
-
-      const state = reactive({ age });
+      const state = reactive({ a: { b: 2 } });
 
       effect(() => {
-        console.log(state.age);
+        console.log(state.a.b);
       });
 
       setTimeout(() => {
-        state.age++;
+        state.a.b++;
       }, 1000);
     </script>
   </body>
