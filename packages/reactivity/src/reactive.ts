@@ -1,25 +1,19 @@
 import { isObject } from '@vue/shared';
 import { mutableHandlers } from './baseHandlers';
 
+// 保存所有使用 reactive 创建出来的响应式对象
+// [Proxy1, Proxy2]
+const reactiveSet = new WeakSet<object>();
+
+// 保存 target 和 响应式对象之间的关联关系
+// reactiveMap = {
+//   [target]: Proxy,
+// }
+const reactiveMap = new WeakMap<object, object>();
+
 export function reactive(target: object) {
   return createReactiveObject(target);
 }
-
-/**
- * 缓存对象的代理对象，避免重复创建代理对象
- * target = { a: 1, b: 2 }
- * reactiveMap = {
- *   [target]: Proxy,
- * }
- */
-const reactiveMap = new WeakMap<object, object>();
-
-/**
- * 保存
- * target = { a: 1, b: 2 }
- * reactiveSet = [Proxy, Proxy]
- */
-const reactiveSet = new WeakSet<object>();
 
 export function createReactiveObject(target: object) {
   // 如果 target 不是对象，则直接返回
@@ -33,9 +27,12 @@ export function createReactiveObject(target: object) {
 
   const proxy = new Proxy(target, mutableHandlers);
 
-  reactiveMap.set(target, proxy);
+  // 保存代理对象，避免重复创建代理对象；
   reactiveSet.add(proxy);
+  // 缓存代理对象，避免重复创建代理对象；
+  reactiveMap.set(target, proxy);
 
+  // 返回代理对象；
   return proxy;
 }
 

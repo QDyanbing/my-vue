@@ -1,6 +1,9 @@
 import { activeSub } from './effect';
 import { link, propagate, type Link } from './system';
 
+/**
+ * 依赖项
+ */
 class Dep {
   // 订阅者链表的头节点
   subs: Link | undefined;
@@ -21,7 +24,7 @@ class Dep {
  *   },
  * }
  */
-const targetMap = new WeakMap<object, Map<string | symbol, any>>();
+const targetMap = new WeakMap<object, Map<string | symbol, Dep>>();
 
 export const track = (target: object, key: string | symbol) => {
   // 如果当前没有活跃的 effect，则直接返回
