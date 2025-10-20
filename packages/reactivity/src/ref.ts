@@ -4,6 +4,14 @@ import { link, propagate } from './system';
 import type { Dependency, Link } from './system';
 import { reactive } from './reactive';
 
+declare const RefSymbol: unique symbol;
+
+export interface Ref<T = any, S = T> {
+  get value(): T;
+  set value(_: S);
+  [RefSymbol]: true;
+}
+
 export enum ReactiveFlags {
   IS_REF = '__v_isRef',
 }

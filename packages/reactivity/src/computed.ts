@@ -1,5 +1,5 @@
 import { hasChanged, isFunction } from '@vue/shared';
-import { ReactiveFlags } from './ref';
+import { ReactiveFlags, type Ref } from './ref';
 import { Dependency, endTrack, link, Link, startTrack, Sub } from './system';
 import { activeSub, setActiveSub } from './effect';
 
@@ -9,6 +9,17 @@ export type ComputedSetter<T> = (newValue: T) => void;
 export interface WritableComputedOptions<T, S = T> {
   get: ComputedGetter<T>;
   set: ComputedSetter<S>;
+}
+
+declare const ComputedRefSymbol: unique symbol;
+
+interface BaseComputedRef<T, S = T> extends Ref<T, S> {
+  [ComputedRefSymbol]: true;
+  effect: ComputedRefImpl;
+}
+
+export interface ComputedRef<T = any> extends BaseComputedRef<T> {
+  readonly value: T;
 }
 
 /**
