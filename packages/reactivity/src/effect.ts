@@ -23,7 +23,7 @@ export function setActiveSub(sub: any) {
 }
 
 // Effect 的实现类
-class ReactiveEffect implements Sub {
+export class ReactiveEffect implements Sub {
   // 依赖项链表的头节点 ref1 -> ref2 -> ref3
   deps: Link | undefined;
   // 依赖项链表的尾节点

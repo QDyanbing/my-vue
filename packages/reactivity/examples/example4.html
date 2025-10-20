@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script type="module">
+      import { ref, watch } from '../dist/reactivity.esm.js';
+
+      const age = ref(18);
+
+      watch(age, (newVal, oldVal) => {
+        console.log(newVal, oldVal);
+      });
+
+      setTimeout(() => {
+        age.value++;
+      }, 1000);
+    </script>
+  </body>
+</html>
