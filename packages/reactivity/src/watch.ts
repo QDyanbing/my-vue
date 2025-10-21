@@ -26,7 +26,16 @@ export interface WatchHandle extends WatchStopHandle {
  * watch 的实现原理：就是依赖effect的scheduler；
  */
 export function watch(source: any, cb?: Function, options: any = {}) {
-  const { immediate } = options;
+  const { immediate, once } = options;
+
+  if (once) {
+    // 如果once为true，则需要包装一下回调函数，在回调函数执行后，自动调用cleanup；
+    let _cb = cb;
+    cb = (...args: any[]) => {
+      _cb?.(...args);
+      cleanup();
+    };
+  }
 
   let getter: () => any;
 
@@ -60,7 +69,9 @@ export function watch(source: any, cb?: Function, options: any = {}) {
     oldValue = effect.run();
   }
 
-  return () => {
+  function cleanup() {
     effect.stop();
-  };
+  }
+
+  return cleanup;
 }

@@ -16,12 +16,11 @@
         (newVal, oldVal) => {
           console.log(newVal, oldVal);
         },
-        { immediate: true },
+        { once: true },
       );
 
       setTimeout(() => {
         age.value++;
-        stop();
 
         setTimeout(() => {
           age.value++;
