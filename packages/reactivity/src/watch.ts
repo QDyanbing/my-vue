@@ -26,6 +26,8 @@ export interface WatchHandle extends WatchStopHandle {
  * watch 的实现原理：就是依赖effect的scheduler；
  */
 export function watch(source: any, cb?: Function, options: any = {}) {
+  const { immediate } = options;
+
   let getter: () => any;
 
   if (isRef(source)) {
@@ -51,7 +53,12 @@ export function watch(source: any, cb?: Function, options: any = {}) {
 
   effect.scheduler = job;
 
-  oldValue = effect.run();
+  if (immediate) {
+    // 立即执行一次，因为立即执行一次，所以不需要等到依赖变化后才执行；
+    job();
+  } else {
+    oldValue = effect.run();
+  }
 
   return () => {
     effect.stop();
