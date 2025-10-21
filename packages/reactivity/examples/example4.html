@@ -7,9 +7,9 @@
   </head>
   <body>
     <script type="module">
-      import { ref, watch } from '../dist/reactivity.esm.js';
+      import { reactive, watch } from '../dist/reactivity.esm.js';
 
-      const state = ref({ a: { b: { c: 1 } } });
+      const state = reactive({ a: { b: { c: 1 } } });
 
       const stop = watch(
         state,
@@ -20,7 +20,7 @@
       );
 
       setTimeout(() => {
-        state.value.a.b.c++;
+        state.a.b.c++;
       }, 1000);
     </script>
   </body>

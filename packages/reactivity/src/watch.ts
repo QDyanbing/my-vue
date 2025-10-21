@@ -1,7 +1,8 @@
 import { isRef, type Ref } from './ref';
 import type { ComputedRef } from './computed';
 import { ReactiveEffect } from './effect';
-import { isObject } from '@vue/shared';
+import { isFunction, isObject } from '@vue/shared';
+import { isReactive } from './reactive';
 
 export type WatchSource<T = any> = Ref<T, any> | ComputedRef<T> | (() => T);
 
@@ -26,13 +27,13 @@ export interface WatchHandle extends WatchStopHandle {
 /**
  * watch 的实现原理：就是依赖effect的scheduler；
  */
-export function watch(source: any, cb?: Function, options: any = {}) {
-  const { immediate, once, deep } = options;
+export function watch(source: any, cb?: any, options: any = {}) {
+  let { immediate, once, deep } = options;
 
   if (once) {
     // 如果once为true，则需要包装一下回调函数，在回调函数执行后，自动调用cleanup；
     let _cb = cb;
-    cb = (...args: any[]) => {
+    cb = (...args) => {
       _cb?.(...args);
       cleanup();
     };
@@ -42,6 +43,12 @@ export function watch(source: any, cb?: Function, options: any = {}) {
 
   if (isRef(source)) {
     getter = () => source.value;
+  } else if (isReactive(source)) {
+    getter = () => source;
+    // 如果deep没传，则默认深度为true；如果传了，则深度为传入的值；
+    deep = !deep ? true : deep;
+  } else if (isFunction(source)) {
+    getter = source;
   }
 
   if (deep) {
