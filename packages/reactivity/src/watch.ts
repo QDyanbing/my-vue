@@ -47,7 +47,10 @@ export function watch(source: any, cb?: Function, options: any = {}) {
   if (deep) {
     const baseGetter = getter;
 
-    getter = () => traverse(baseGetter());
+    // 处理deep是数字的情况，如果是true，则深度为Infinity，如果是数字，则深度为数字；
+    const depth = deep === true ? Infinity : deep;
+
+    getter = () => traverse(baseGetter(), depth);
   }
 
   let oldValue: any;
@@ -83,16 +86,16 @@ export function watch(source: any, cb?: Function, options: any = {}) {
   return cleanup;
 }
 
-function traverse(value: any, seen: Set<any> = new Set()) {
-  // 不是对象，直接返回；
-  if (!isObject(value)) return value;
+function traverse(value: any, depth: number, seen: Set<any> = new Set()) {
+  // 不是对象，或者深度为0，直接返回；
+  if (!isObject(value) || depth <= 0) return value;
   // 如果已经遍历过，直接返回；
   if (seen.has(value)) return value;
 
   // 添加到seen中，避免重复遍历；
   seen.add(value);
   for (const key in value) {
-    traverse(value[key], seen);
+    traverse(value[key], depth - 1, seen);
   }
 
   return value;
