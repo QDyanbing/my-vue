@@ -24,6 +24,8 @@ export function setActiveSub(sub: any) {
 
 // Effect 的实现类
 export class ReactiveEffect implements Sub {
+  // 表示这个 effect 是否激活；
+  active: boolean = true;
   // 依赖项链表的头节点 ref1 -> ref2 -> ref3
   deps: Link | undefined;
   // 依赖项链表的尾节点
@@ -36,6 +38,12 @@ export class ReactiveEffect implements Sub {
   constructor(public fn: Function) {}
 
   run() {
+    if (!this.active) {
+      // 如果这个 effect 已经停止了，那么直接执行函数并返回结果；
+      // 防止在 stop 之后，再次执行又重新收集依赖；
+      return this.fn();
+    }
+
     /**
      * 先将当前的 effect 保存起来，用来处理嵌套的逻辑;
      * effect(()=>{
@@ -76,6 +84,15 @@ export class ReactiveEffect implements Sub {
    */
   scheduler() {
     this.run();
+  }
+
+  stop() {
+    if (this.active) {
+      // 直接开始追踪依赖，不执行run直接结束追踪依赖；就会把依赖关系清理掉；
+      startTrack(this);
+      endTrack(this);
+      this.active = false;
+    }
   }
 }
 

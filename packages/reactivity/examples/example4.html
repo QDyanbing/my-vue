@@ -11,12 +11,17 @@
 
       const age = ref(18);
 
-      watch(age, (newVal, oldVal) => {
+      const stop = watch(age, (newVal, oldVal) => {
         console.log(newVal, oldVal);
       });
 
       setTimeout(() => {
         age.value++;
+        stop();
+
+        setTimeout(() => {
+          age.value++;
+        }, 1000);
       }, 1000);
     </script>
   </body>

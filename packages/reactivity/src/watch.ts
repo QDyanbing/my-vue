@@ -53,5 +53,7 @@ export function watch(source: any, cb?: Function, options: any = {}) {
 
   oldValue = effect.run();
 
-  return () => {};
+  return () => {
+    effect.stop();
+  };
 }
