@@ -9,22 +9,18 @@
     <script type="module">
       import { ref, watch } from '../dist/reactivity.esm.js';
 
-      const age = ref(18);
+      const state = ref({ a: { b: { c: 1 } } });
 
       const stop = watch(
-        age,
+        state,
         (newVal, oldVal) => {
           console.log(newVal, oldVal);
         },
-        { once: true },
+        { deep: true },
       );
 
       setTimeout(() => {
-        age.value++;
-
-        setTimeout(() => {
-          age.value++;
-        }, 1000);
+        state.value.a.b.c++;
       }, 1000);
     </script>
   </body>
