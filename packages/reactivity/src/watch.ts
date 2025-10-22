@@ -35,7 +35,7 @@ export function watch(source: any, cb?: any, options: any = {}) {
     let _cb = cb;
     cb = (...args) => {
       _cb?.(...args);
-      cleanup();
+      stop();
     };
   }
 
@@ -62,13 +62,25 @@ export function watch(source: any, cb?: any, options: any = {}) {
 
   let oldValue: any;
 
+  let cleanup: (() => void) | undefined;
+
+  function onCleanup(cb?: () => void) {
+    cleanup = cb;
+  }
+
   function job() {
+    if (cleanup) {
+      // 清理上一次的副作用，如果有就执行，执行完后，把cleanup设置为null；
+      cleanup();
+      cleanup = null;
+    }
+
     //  执行 effect.run 拿到getter的返回值，不能直接执行getter，因为要收集依赖；
     const newValue = effect.run();
 
     // 执行用户传入的回调函数，把新值和旧值传给用户；
     if (cb) {
-      cb(newValue, oldValue);
+      cb(newValue, oldValue, onCleanup);
     }
 
     // 本次的最新值就是下次的旧值；
@@ -86,11 +98,11 @@ export function watch(source: any, cb?: any, options: any = {}) {
     oldValue = effect.run();
   }
 
-  function cleanup() {
+  function stop() {
     effect.stop();
   }
 
-  return cleanup;
+  return stop;
 }
 
 function traverse(value: any, depth: number, seen: Set<any> = new Set()) {

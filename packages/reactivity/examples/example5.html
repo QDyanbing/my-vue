@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+
+    <style>
+      #app1 {
+        width: 100px;
+        height: 100px;
+        background-color: red;
+      }
+
+      #app2 {
+        width: 100px;
+        height: 100px;
+        background-color: blue;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app1"></div>
+    <div id="app2"></div>
+    <button id="button">button</button>
+
+    <script type="module">
+      import { ref, watch } from '../dist/reactivity.esm.js';
+
+      const flag = ref(true);
+
+      watch(
+        flag,
+        (newVal, oldVal, onCleanup) => {
+          const dom = newVal ? app1 : app2;
+
+          function handler() {
+            console.log(newVal ? '点击了 app1' : '点击了 app2');
+          }
+
+          dom.addEventListener('click', handler);
+
+          onCleanup(() => {
+            dom.removeEventListener('click', handler);
+          });
+        },
+        { immediate: true },
+      );
+
+      button.onclick = () => {
+        flag.value = !flag.value;
+      };
+    </script>
+  </body>
+</html>
